@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <title>Notes List</title>
+    <style>
+        body { font-family: Arial; padding: 20px; }
+        table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+        th, td { padding: 10px; border: 1px solid #ccc; text-align: left; }
+        th { background: #f2f2f2; }
+        #searchBox { padding: 8px; width: 250px; }
+    </style>
+</head>
+<body>
+
+<h2>All Notes</h2>
+
+<input id="searchBox" type="text" placeholder="Search notes..." />
+<button onclick="loadNotes()">Search</button>
+
+<table id="notesTable">
+    <thead>
+    <tr>
+        <th>ID</th>
+        <th>Title</th>
+        <th>Body</th>
+        <th>S3 Url</th>
+        <th>Created At</th>
+    </tr>
+    </thead>
+    <tbody></tbody>
+</table>
+
+<script>
+    function loadNotes(page = 0) {
+        const query = document.getElementById("searchBox").value;
+        let url = `http://localhost:8087/api/notes/get/notes?page=${page}&size=20`;
+
+        if (query) {
+            url += `&query=${encodeURIComponent(query)}`;
+        }
+
+        fetch(url)
+            .then(res => res.json())
+            .then(data => {
+                const content = data.content; // pageable content
+                const tbody = document.querySelector("#notesTable tbody");
+                tbody.innerHTML = "";
+                content.forEach(n => {
+                    tbody.innerHTML += `
+                        <tr>
+                            <td>${n.id}</td>
+                            <td>${n.title}</td>
+                            <td>${n.body}</td>
+                            <td>
+                                ${n.s3Url ? `<a href="${n.s3Url}" target="_blank">${n.s3Url}</a>` : 'No file'}
+                            </td>
+                            <td>${n.createdAt}</td>
+                        </tr>
+                    `;
+                });
+            })
+            .catch(err => console.error("Error loading notes:", err));
+    }
+    loadNotes();
+</script>
+
+</body>
+</html>
